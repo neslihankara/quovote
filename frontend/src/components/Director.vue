@@ -19,7 +19,9 @@ export default {
   },
   data() {
     return {
-      triggers: '',
+      triggers: [],
+      triggerInput: '',
+      highlightedTrigger: '',
       speechRecognitionInstance,
       state: speechRecognitionInstance ? STATES.INACTIVE : STATES.UNAVAILABLE
     }
@@ -82,15 +84,31 @@ export default {
         this.$refs.mehter.play()
       }
 
-      const isTriggered = this.triggers.split('\n').some(trigger => trigger && transcript.includes(trigger))
+      const triggeredKeyword = this.triggers.find(trigger => trigger && transcript.includes(trigger))
 
-      console.log({ transcript, isTriggered })
+      console.log({ transcript, triggeredKeyword })
 
-      if (isTriggered) this.skipQuestion()
-    }
+      if (triggeredKeyword) {
+        this.skipQuestion()
+
+        this.highlightedTrigger = triggeredKeyword
+
+        setTimeout(() => this.highlightedTrigger = '', 1000)
+      }
+    },
+    handleClose(removedTag) {
+      this.triggers = this.triggers.filter(tag => tag !== removedTag);
+    },
+    handleInputConfirm() {
+      const triggers = this.triggerInput.split('\n').filter(trigger => trigger.length && !this.triggers.includes(trigger))
+
+      this.triggers = this.triggers.concat(triggers)
+
+      this.triggerInput = ''
+    },
   },
   mounted() {
-    this.triggers = this.user.director.triggers.join('\n')
+    this.triggers = this.user.director.triggers
   },
   beforeDestroy() {
     const { speechRecognitionInstance } = this
@@ -105,7 +123,7 @@ export default {
   watch: {
     triggers(newTriggers, oldTriggers) {
       const director = {
-        triggers: newTriggers.split('\n').filter(t => t),
+        triggers: newTriggers.filter(t => t),
         language: this.user.director.language
       }
 
@@ -121,8 +139,13 @@ export default {
     a-textarea(
       placeholder='Enter trigger phrases (each line represents a trigger)'
       :autoSize='{ minRows: 5 }'
-      v-model="triggers"
+      v-model="triggerInput"
+      ref="input"
+      @blur="handleInputConfirm"
+      @keyup.enter.exact="handleInputConfirm"
     )
+    .triggers
+      a-tag(v-for="(tag, index) in triggers" :key='tag' :closable="true" @close="() => handleClose(tag)" :color="highlightedTrigger == tag ? '#1890ff' : ''") {{ tag }}
     #director-actions
       a-button(type='primary' @click="skipQuestion" :disabled="noQuestionLeft") Skip question
       a-button(@click="activateVoiceRecognition" :disabled="state != STATES.INACTIVE") Activate: Voice-Action
@@ -161,5 +184,15 @@ export default {
 .director-listening-state {
   margin-bottom: 0;
   color: var(--antd-wave-shadow-color);
+}
+
+.triggers {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16px;
+
+  .ant-tag {
+    margin-bottom: 8px;
+  }
 }
 </style>
