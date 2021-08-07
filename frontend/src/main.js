@@ -22,7 +22,8 @@ import {
   Alert,
   Empty,
   Tabs,
-  Pagination
+  Pagination,
+  Dropdown
 } from 'ant-design-vue'
 
 const components = [
@@ -43,7 +44,8 @@ const components = [
   Alert,
   Empty,
   Tabs,
-  Pagination
+  Pagination,
+  Dropdown
 ]
 
 components.forEach(c => Vue.use(c))

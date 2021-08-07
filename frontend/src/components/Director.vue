@@ -93,7 +93,17 @@ export default {
       console.log({ transcript, isTriggered })
 
       if (isTriggered) this.skipQuestion()
-    }
+    },
+    changeDirectorsLanguage(language) {
+      const { speechRecognitionInstance } = this
+      if (language === 'tr-TR') {
+        speechRecognitionInstance.language = 'tr-TR'
+        this.user.director.language = 'tr-TR'
+      } else {
+        speechRecognitionInstance.language = 'en-US'
+        this.user.director.language = 'en-US'
+      }
+    },
   },
   mounted() {
     this.triggers = this.user.director.triggers.join('\n')
@@ -139,6 +149,14 @@ export default {
         transition(name="slide-fade")
           p.director-listening-state(v-show="state == STATES.ACTIVE") Listening...
       a(:href="`${$router.history.current.path}/monitor`" target="_blank").go-to-monitor Go to monitor
+      a-dropdown(:trigger="['click']")
+        a.ant-dropdown-link(@click="e => e.preventDefault()") {{this.user.director.language}}
+          a-icon(type='down')
+        a-menu(slot='overlay')
+          a-menu-item(key='0')
+            a(href="#" @click="changeDirectorsLanguage('en-US')") en-US
+          a-menu-item(key='1')
+            a(href="#" @click="changeDirectorsLanguage('tr-TR')") tr-TR
 </template>
 
 <style lang="scss" scoped>
@@ -148,6 +166,9 @@ export default {
   align-items: center;
 
   .go-to-monitor {
+    margin-left: 80px;
+  }
+  .ant-dropdown-link {
     margin-left: auto;
   }
 }
